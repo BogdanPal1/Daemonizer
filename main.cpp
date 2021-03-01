@@ -96,6 +96,7 @@ void signalHandler(int sig) {
         case SIGTERM:
             logMessage("Terminate signal catched!");
             closelog();
+            unlink(PID_FILE);
             exit(EXIT_SUCCESS);
             break;
     }
