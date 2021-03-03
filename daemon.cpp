@@ -1,15 +1,5 @@
 #include "daemon.h"
 
-Daemon::pDaemon Daemon::_daemon = nullptr;
-QString Daemon::_pidFile = "";
-
-Daemon::pDaemon Daemon::getInstance()
-{
-    if (_daemon == nullptr)
-        _daemon = pDaemon{new Daemon()};
-    return std::move(_daemon);
-}
-
 Daemon::Daemon()
 {
     _pidFile = QString("/tmp/TestDaemon.pid");

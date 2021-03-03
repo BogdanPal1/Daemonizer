@@ -24,13 +24,14 @@ public:
 
 public:
 
-    static pDaemon getInstance();
+    Daemon();
     Daemon(Daemon& other) = delete;
     Daemon& operator=(Daemon& other) = delete;
     Daemon(Daemon&& other) = delete;
     Daemon& operator=(Daemon&& other) = delete;
+    ~Daemon();
 
-    static void Daemonize();
+    void Daemonize();
 
     // Unix signal handlers
     static void termHandler(int sig);
@@ -38,7 +39,7 @@ public:
     static void pauseHandler(int sig);
     static void resumeHandler(int sig);
 
-    static void logMessage(const QString& message);
+    void logMessage(const QString& message);
 
 public slots:
     // Qt signal handlers
@@ -46,16 +47,13 @@ public slots:
     void handleSigTerm();
     void handleSigInt();
 
-protected:
-    Daemon();
-
 private:
 
     static void signalHandlerConfig();
 private:
 
-    static pDaemon _daemon; //!< Unique pointer to Daemon
-    static QString _pidFile; //!< Name of file with process ID
+    pDaemon _daemon; //!< Unique pointer to Daemon
+    QString _pidFile; //!< Name of file with process ID
     static int _sigHupFd[2]; //!< File descriptor for HUP signal
     static int _sigTermFd[2]; //!< File descriptor for TERM signal
     static int _sigIntFd[2]; //!< File descriptor for INT signal
