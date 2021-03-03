@@ -25,7 +25,7 @@ public:
 
 public:
 
-    Daemon();
+    Daemon(QObject* parent = nullptr);
     Daemon(Daemon& other) = delete;
     Daemon& operator=(Daemon& other) = delete;
     Daemon(Daemon&& other) = delete;

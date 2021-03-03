@@ -1,17 +1,21 @@
 #include "daemon.h"
 
-Daemon::Daemon()
+int Daemon::_sigHupFd[2];
+int Daemon::_sigIntFd[2];
+int Daemon::_sigTermFd[2];
+
+Daemon::Daemon(QObject* parent) : QObject(parent)
 {
     _pidFile = QString("/tmp/TestDaemon.pid");
     openlog("Daemon test", LOG_PID | LOG_CONS, LOG_DAEMON);
 
-    if (::socketpair(AF_UNIX, SOCK_STREAM, 0, _sigHupFd))
+    if (::socketpair(AF_UNIX, SOCK_STREAM, 0, _sigHupFd)) {}
         // log error
 
-    if (::socketpair(AF_UNIX, SOCK_STREAM, 0, _sigTermFd))
+    if (::socketpair(AF_UNIX, SOCK_STREAM, 0, _sigTermFd)) {}
         // log error
 
-    if (::socketpair(AF_UNIX, SOCK_STREAM, 0, _sigIntFd))
+    if (::socketpair(AF_UNIX, SOCK_STREAM, 0, _sigIntFd)) {}
         // log error
 
     _snHup = new QSocketNotifier(_sigHupFd[1], QSocketNotifier::Read, this);
@@ -20,6 +24,13 @@ Daemon::Daemon()
     connect(_snTerm, &QSocketNotifier::activated, this, &Daemon::handleSigTerm);
     _snInt = new QSocketNotifier(_sigIntFd[1], QSocketNotifier::Read, this);
     connect(_snInt, &QSocketNotifier::activated, this, &Daemon::handleSigInt);
+}
+
+Daemon::~Daemon()
+{
+    delete _snHup;
+    delete _snInt;
+    delete _snTerm;
 }
 
 void Daemon::Daemonize()
@@ -111,35 +122,83 @@ void Daemon::signalHandlerConfig()
     signal(SIGTTOU, SIG_IGN);
 }
 
-void Daemon::termHandler(int sig)
+void Daemon::termHandler(int unusedSig)
 {
-    switch (sig) {
-        case SIGTERM:
-            logMessage("Terminate signal catched!");
-            closelog();
-            unlink(_pidFile.toStdString().c_str());
-            exit(EXIT_SUCCESS);
-            break;
-        case SIGINT:
-            logMessage("Interrupt signal catched!");
-            closelog();
-            unlink(_pidFile.toStdString().c_str());
-            exit(EXIT_SUCCESS);
-            break;
-    }
+    qint8 a = 1;
+    ::write(_sigTermFd[0], &a, sizeof (a));
 }
 
-void Daemon::pauseHandler(int sig)
+void Daemon::intHandler(int unusedSig)
 {
-    logMessage("Stop signal catched!");
+    qint8 a = 1;
+    ::write(_sigIntFd[0], &a, sizeof (a));
 }
 
-void Daemon::resumeHandler(int sig)
+void Daemon::hupHandler(int unusedSig)
 {
-    logMessage("Continue signal catched!");
+    qint8 a = 1;
+    ::write(_sigHupFd[0], &a, sizeof (a));
+}
+
+
+void Daemon::pauseHandler(int unusedSig)
+{
+    //logMessage("Stop signal catched!");
+}
+
+void Daemon::resumeHandler(int unusedSig)
+{
+    //logMessage("Continue signal catched!");
+}
+
+void Daemon::handleSigHup()
+{
+    _snHup->setEnabled(false);
+    quint8 tmp;
+    ::read(_sigHupFd[1], &tmp, sizeof (tmp));
+
+    // some stuff
+    logMessage("Hangup signal catched!");
+    closelog();
+    unlink(_pidFile.toStdString().c_str());
+    exit(EXIT_SUCCESS);
+
+    _snHup->setEnabled(true);
+}
+
+void Daemon::handleSigTerm()
+{
+    _snTerm->setEnabled(false);
+    quint8 tmp;
+    ::read(_sigTermFd[1], &tmp, sizeof (tmp));
+
+    // some stuff
+    logMessage("Terminate signal catched!");
+    closelog();
+    unlink(_pidFile.toStdString().c_str());
+    exit(EXIT_SUCCESS);
+
+    _snTerm->setEnabled(true);
+}
+
+void Daemon::handleSigInt()
+{
+    _snInt->setEnabled(false);
+    quint8 tmp;
+    ::read(_sigIntFd[1], &tmp, sizeof (tmp));
+
+    // some stuff
+    logMessage("Interrupt signal catched!");
+    closelog();
+    unlink(_pidFile.toStdString().c_str());
+    exit(EXIT_SUCCESS);
+
+    _snInt->setEnabled(true);
 }
 
 void Daemon::logMessage(const QString &message)
 {
     syslog(LOG_INFO, "%s", message.toStdString().c_str());
 }
+
+
