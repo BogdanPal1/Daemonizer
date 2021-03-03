@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QString>
+#include <QSocketNotifier>
 
 #include <stdio.h>
 #include <fcntl.h>
@@ -26,25 +27,41 @@ public:
     static pDaemon getInstance();
     Daemon(Daemon& other) = delete;
     Daemon& operator=(Daemon& other) = delete;
+    Daemon(Daemon&& other) = delete;
+    Daemon& operator=(Daemon&& other) = delete;
 
     static void Daemonize();
 
+    // Unix signal handlers
     static void termHandler(int sig);
+    static void intHandler(int sig);
     static void pauseHandler(int sig);
     static void resumeHandler(int sig);
 
     static void logMessage(const QString& message);
 
+public slots:
+    // Qt signal handlers
+    void handleSigHup();
+    void handleSigTerm();
+    void handleSigInt();
+
 protected:
     Daemon();
+
 private:
-    Daemon(Daemon&& other) = default;
-    Daemon& operator=(Daemon&& other) = default;
+
     static void signalHandlerConfig();
 private:
 
-    static pDaemon _daemon;
-    static QString _pidFile;
+    static pDaemon _daemon; //!< Unique pointer to Daemon
+    static QString _pidFile; //!< Name of file with process ID
+    static int _sigHupFd[2]; //!< File descriptor for HUP signal
+    static int _sigTermFd[2]; //!< File descriptor for TERM signal
+    static int _sigIntFd[2]; //!< File descriptor for INT signal
+    QSocketNotifier* _snHup = nullptr; //!< Socket notifier for HUP signal
+    QSocketNotifier* _snTerm = nullptr; //!< Socket notifier for TERM signal
+    QSocketNotifier* _snInt = nullptr; //!< Socket notifier for INT signal
 };
 
 #endif // DAEMON_H
