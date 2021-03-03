@@ -83,13 +83,32 @@ void Daemon::Daemonize()
 
 void Daemon::signalHandlerConfig()
 {
+    struct sigaction hup, term, interrupt;
+
+    hup.sa_handler = Daemon::hupHandler;
+    sigemptyset(&hup.sa_mask);
+    hup.sa_flags = 0;
+    hup.sa_flags |= SA_RESTART;
+
+    sigaction(SIGHUP, &hup, nullptr);
+
+    term.sa_handler = Daemon::termHandler;
+    sigemptyset(&term.sa_mask);
+    term.sa_flags = 0;
+    term.sa_flags |= SA_RESTART;
+
+    sigaction(SIGTERM, &term, nullptr);
+
+    interrupt.sa_handler = Daemon::intHandler;
+    sigemptyset(&interrupt.sa_mask);
+    interrupt.sa_flags = 0;
+    interrupt.sa_flags |= SA_RESTART;
+
+    sigaction(SIGINT, &interrupt, nullptr);
+
     signal(SIGCHLD, SIG_IGN);
     signal(SIGTTIN, SIG_IGN);
     signal(SIGTTOU, SIG_IGN);
-    signal(SIGTERM, termHandler);
-    signal(SIGINT, termHandler);
-    signal(SIGTSTP, pauseHandler);
-    signal(SIGCONT, resumeHandler);
 }
 
 void Daemon::termHandler(int sig)

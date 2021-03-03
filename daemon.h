@@ -37,6 +37,7 @@ public:
     // Unix signal handlers
     static void termHandler(int sig);
     static void intHandler(int sig);
+    static void hupHandler(int sig);
     static void pauseHandler(int sig);
     static void resumeHandler(int sig);
 
