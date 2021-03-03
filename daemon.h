@@ -1,6 +1,7 @@
 #ifndef DAEMON_H
 #define DAEMON_H
 
+#include <QObject>
 #include <QString>
 
 #include <stdio.h>
@@ -14,9 +15,9 @@
 #include <memory>
 
 
-
-class Daemon
+class Daemon : public QObject
 {
+    Q_OBJECT
 public:
     typedef std::unique_ptr<Daemon> pDaemon;
 
