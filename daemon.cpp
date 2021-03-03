@@ -4,6 +4,22 @@ Daemon::Daemon()
 {
     _pidFile = QString("/tmp/TestDaemon.pid");
     openlog("Daemon test", LOG_PID | LOG_CONS, LOG_DAEMON);
+
+    if (::socketpair(AF_UNIX, SOCK_STREAM, 0, _sigHupFd))
+        // log error
+
+    if (::socketpair(AF_UNIX, SOCK_STREAM, 0, _sigTermFd))
+        // log error
+
+    if (::socketpair(AF_UNIX, SOCK_STREAM, 0, _sigIntFd))
+        // log error
+
+    _snHup = new QSocketNotifier(_sigHupFd[1], QSocketNotifier::Read, this);
+    connect(_snHup, &QSocketNotifier::activated, this, &Daemon::handleSigHup);
+    _snTerm = new QSocketNotifier(_sigTermFd[1], QSocketNotifier::Read, this);
+    connect(_snTerm, &QSocketNotifier::activated, this, &Daemon::handleSigTerm);
+    _snInt = new QSocketNotifier(_sigIntFd[1], QSocketNotifier::Read, this);
+    connect(_snInt, &QSocketNotifier::activated, this, &Daemon::handleSigInt);
 }
 
 void Daemon::Daemonize()

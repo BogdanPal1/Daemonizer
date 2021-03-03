@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/syslog.h>
+#include <sys/socket.h>
 #include <sys/resource.h>
 #include <memory>
 
