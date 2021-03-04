@@ -1,6 +1,14 @@
-#include "program.cpp"
+#include <QCoreApplication>
+#include "daemon.h"
 
 int main(int argc, char *argv[])
 {
-    prog_main(argc, argv);
+    QCoreApplication a(argc, argv);
+
+    Daemon d;
+    d.daemonize();
+
+    // Make some great stuff here!
+
+    return a.exec();
 }

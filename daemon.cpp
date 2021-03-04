@@ -8,22 +8,6 @@ Daemon::Daemon(QObject* parent) : QObject(parent)
 {
     _pidFile = QString("/tmp/TestDaemon.pid");
     openlog("Daemon test", LOG_PID | LOG_CONS, LOG_DAEMON);
-
-    if (::socketpair(AF_UNIX, SOCK_STREAM, 0, _sigHupFd)) {}
-        // log error
-
-    if (::socketpair(AF_UNIX, SOCK_STREAM, 0, _sigTermFd)) {}
-        // log error
-
-    if (::socketpair(AF_UNIX, SOCK_STREAM, 0, _sigIntFd)) {}
-        // log error
-
-    _snHup = new QSocketNotifier(_sigHupFd[1], QSocketNotifier::Read, this);
-    connect(_snHup, &QSocketNotifier::activated, this, &Daemon::handleSigHup);
-    _snTerm = new QSocketNotifier(_sigTermFd[1], QSocketNotifier::Read, this);
-    connect(_snTerm, &QSocketNotifier::activated, this, &Daemon::handleSigTerm);
-    _snInt = new QSocketNotifier(_sigIntFd[1], QSocketNotifier::Read, this);
-    connect(_snInt, &QSocketNotifier::activated, this, &Daemon::handleSigInt);
 }
 
 Daemon::~Daemon()
@@ -33,7 +17,7 @@ Daemon::~Daemon()
     delete _snTerm;
 }
 
-void Daemon::Daemonize()
+void Daemon::daemonize()
 {
     pid_t pid, sid;
     struct rlimit flim;
@@ -87,6 +71,28 @@ void Daemon::Daemonize()
     sprintf(str, "%d\n", getpid());
     write(lFile, str, strlen(str));
 
+    if (::socketpair(AF_UNIX, SOCK_STREAM, 0, _sigHupFd)) {
+        logMessage("Can't make socket pair!");
+        exit(EXIT_FAILURE);
+    }
+
+    if (::socketpair(AF_UNIX, SOCK_STREAM, 0, _sigTermFd)) {
+        logMessage("Can't make socket pair!");
+        exit(EXIT_FAILURE);
+    }
+
+    if (::socketpair(AF_UNIX, SOCK_STREAM, 0, _sigIntFd)) {
+        logMessage("Can't make socket pair!");
+        exit(EXIT_FAILURE);
+    }
+
+    _snHup = new QSocketNotifier(_sigHupFd[1], QSocketNotifier::Read, this);
+    connect(_snHup, &QSocketNotifier::activated, this, &Daemon::handleSigHup);
+    _snTerm = new QSocketNotifier(_sigTermFd[1], QSocketNotifier::Read, this);
+    connect(_snTerm, &QSocketNotifier::activated, this, &Daemon::handleSigTerm);
+    _snInt = new QSocketNotifier(_sigIntFd[1], QSocketNotifier::Read, this);
+    connect(_snInt, &QSocketNotifier::activated, this, &Daemon::handleSigInt);
+
     signalHandlerConfig();
 
     logMessage("Daemon started!");
@@ -122,31 +128,27 @@ void Daemon::signalHandlerConfig()
     signal(SIGTTOU, SIG_IGN);
 }
 
-void Daemon::termHandler(int unusedSig)
+void Daemon::termHandler(int sig)
 {
-    qint8 a = 1;
-    ::write(_sigTermFd[0], &a, sizeof (a));
+    ::write(_sigTermFd[0], &sig, sizeof (sig));
 }
 
-void Daemon::intHandler(int unusedSig)
+void Daemon::intHandler(int sig)
 {
-    qint8 a = 1;
-    ::write(_sigIntFd[0], &a, sizeof (a));
+    ::write(_sigIntFd[0], &sig, sizeof (sig));
 }
 
-void Daemon::hupHandler(int unusedSig)
+void Daemon::hupHandler(int sig)
 {
-    qint8 a = 1;
-    ::write(_sigHupFd[0], &a, sizeof (a));
+    ::write(_sigHupFd[0], &sig, sizeof (sig));
 }
 
-
-void Daemon::pauseHandler(int unusedSig)
+void Daemon::pauseHandler(int sig)
 {
     //logMessage("Stop signal catched!");
 }
 
-void Daemon::resumeHandler(int unusedSig)
+void Daemon::resumeHandler(int sig)
 {
     //logMessage("Continue signal catched!");
 }
@@ -154,31 +156,29 @@ void Daemon::resumeHandler(int unusedSig)
 void Daemon::handleSigHup()
 {
     _snHup->setEnabled(false);
-    quint8 tmp;
+    int tmp;
     ::read(_sigHupFd[1], &tmp, sizeof (tmp));
 
     // some stuff
     logMessage("Hangup signal catched!");
     closelog();
     unlink(_pidFile.toStdString().c_str());
-    exit(EXIT_SUCCESS);
-
     _snHup->setEnabled(true);
+    exit(EXIT_SUCCESS);  
 }
 
 void Daemon::handleSigTerm()
 {
     _snTerm->setEnabled(false);
-    quint8 tmp;
+    int tmp;
     ::read(_sigTermFd[1], &tmp, sizeof (tmp));
 
     // some stuff
     logMessage("Terminate signal catched!");
     closelog();
     unlink(_pidFile.toStdString().c_str());
-    exit(EXIT_SUCCESS);
-
     _snTerm->setEnabled(true);
+    exit(EXIT_SUCCESS);
 }
 
 void Daemon::handleSigInt()
@@ -191,14 +191,11 @@ void Daemon::handleSigInt()
     logMessage("Interrupt signal catched!");
     closelog();
     unlink(_pidFile.toStdString().c_str());
-    exit(EXIT_SUCCESS);
-
     _snInt->setEnabled(true);
+    exit(EXIT_SUCCESS);    
 }
 
 void Daemon::logMessage(const QString &message)
 {
     syslog(LOG_INFO, "%s", message.toStdString().c_str());
 }
-
-

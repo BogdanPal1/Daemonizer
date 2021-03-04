@@ -16,27 +16,57 @@
 #include <sys/resource.h>
 #include <memory>
 
-
+/*!
+ * \brief The Daemon class
+ */
 class Daemon : public QObject
 {
     Q_OBJECT
 public:
+
+    /*!
+     * \brief pDaemon Alias for std::unique_ptr<Daemon>.
+     */
     typedef std::unique_ptr<Daemon> pDaemon;
 
 public:
 
+    /*!
+     * \brief Daemon Basic constructor.
+     * \param parent
+     */
     Daemon(QObject* parent = nullptr);
     Daemon(Daemon& other) = delete;
     Daemon& operator=(Daemon& other) = delete;
     Daemon(Daemon&& other) = delete;
     Daemon& operator=(Daemon&& other) = delete;
+    /*!
+     * \brief Destructor
+     */
     ~Daemon();
 
-    void Daemonize();
+    /*!
+     * \brief Daemonize Main method of class. Use for daemonisation.
+     */
+    void daemonize();
 
     // Unix signal handlers
+    /*!
+     * \brief termHandler Handler of UNIX SIGTERM signal.
+     * \param sig Unused variable. Number of UNIX signal.
+     */
     static void termHandler(int sig);
+
+    /*!
+     * \brief intHandler Handler of UNIX SIGINT signal.
+     * \param sig Unused variable. Number of UNIX signal.
+     */
     static void intHandler(int sig);
+
+    /*!
+     * \brief hupHandler Handler of UNIX SIGHUP signal.
+     * \param sig Unused variable. Number of UNIX signal.
+     */
     static void hupHandler(int sig);
     static void pauseHandler(int sig);
     static void resumeHandler(int sig);
@@ -45,12 +75,26 @@ public:
 
 public slots:
     // Qt signal handlers
+    /*!
+     * \brief handleSigHup Handler of SIGHUP signal which can work with Qt objects.
+     */
     void handleSigHup();
+
+    /*!
+     * \brief handleSigTerm Handler of SIGTERM signal which can work with Qt objects.
+     */
     void handleSigTerm();
+
+    /*!
+     * \brief handleSigInt Handler of SIGINT signal which can work with Qt objects.
+     */
     void handleSigInt();
 
 private:
 
+    /*!
+     * \brief signalHandlerConfig Method that configure signal handlers.
+     */
     static void signalHandlerConfig();
 private:
 
