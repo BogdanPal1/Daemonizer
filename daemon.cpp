@@ -7,7 +7,6 @@ int Daemon::_sigTermFd[2];
 Daemon::Daemon(QObject* parent) : QObject(parent)
 {
     _pidFile = QString("/tmp/TestDaemon.pid");
-    openlog("Daemon test", LOG_PID | LOG_CONS, LOG_DAEMON);
 }
 
 Daemon::~Daemon()
@@ -38,7 +37,6 @@ void Daemon::daemonize()
 
     sid = setsid();
     if (sid < 0) {
-        logMessage("Can't set session ID!");
         exit(EXIT_FAILURE);
     }
 
@@ -54,35 +52,30 @@ void Daemon::daemonize()
     umask(0);
 
     if (chdir("/") < 0) {
-        logMessage("Can't change directory to root!");
         exit(EXIT_FAILURE);
     }
 
     int lFile = open(_pidFile.toStdString().c_str(), O_RDWR|O_CREAT, 0640);
 
     if (lFile < 0) {
-        logMessage("Can't open PID file!");
         exit(EXIT_FAILURE);
     }
 
     if (lockf(lFile, F_TLOCK, 0) < 0) {
         exit(EXIT_SUCCESS);
     }
-    sprintf(str, "%d\n", getpid());
+    sprintf(str, "%5d\n", getpid());
     write(lFile, str, strlen(str));
 
     if (::socketpair(AF_UNIX, SOCK_STREAM, 0, _sigHupFd)) {
-        logMessage("Can't make socket pair!");
         exit(EXIT_FAILURE);
     }
 
     if (::socketpair(AF_UNIX, SOCK_STREAM, 0, _sigTermFd)) {
-        logMessage("Can't make socket pair!");
         exit(EXIT_FAILURE);
     }
 
     if (::socketpair(AF_UNIX, SOCK_STREAM, 0, _sigIntFd)) {
-        logMessage("Can't make socket pair!");
         exit(EXIT_FAILURE);
     }
 
@@ -94,8 +87,6 @@ void Daemon::daemonize()
     connect(_snInt, &QSocketNotifier::activated, this, &Daemon::handleSigInt);
 
     signalHandlerConfig();
-
-    logMessage("Daemon started!");
 }
 
 void Daemon::signalHandlerConfig()
@@ -143,28 +134,18 @@ void Daemon::hupHandler(int sig)
     ::write(_sigHupFd[0], &sig, sizeof (sig));
 }
 
-void Daemon::pauseHandler(int sig)
-{
-    //logMessage("Stop signal catched!");
-}
-
-void Daemon::resumeHandler(int sig)
-{
-    //logMessage("Continue signal catched!");
-}
-
 void Daemon::handleSigHup()
 {
     _snHup->setEnabled(false);
     int tmp;
     ::read(_sigHupFd[1], &tmp, sizeof (tmp));
 
-    // some stuff
-    logMessage("Hangup signal catched!");
-    closelog();
-    unlink(_pidFile.toStdString().c_str());
+    /*
+     * DO SOME STUFF
+     */
+
     _snHup->setEnabled(true);
-    exit(EXIT_SUCCESS);  
+    emit sigHup();
 }
 
 void Daemon::handleSigTerm()
@@ -173,29 +154,26 @@ void Daemon::handleSigTerm()
     int tmp;
     ::read(_sigTermFd[1], &tmp, sizeof (tmp));
 
-    // some stuff
-    logMessage("Terminate signal catched!");
-    closelog();
+    /*
+     * DO SOME STUFF
+     */
+
     unlink(_pidFile.toStdString().c_str());
     _snTerm->setEnabled(true);
-    exit(EXIT_SUCCESS);
+    emit sigTerm();
 }
 
 void Daemon::handleSigInt()
 {
     _snInt->setEnabled(false);
-    quint8 tmp;
+    int tmp;
     ::read(_sigIntFd[1], &tmp, sizeof (tmp));
 
-    // some stuff
-    logMessage("Interrupt signal catched!");
-    closelog();
+    /*
+     * DO SOME STUFF
+     */
+
     unlink(_pidFile.toStdString().c_str());
     _snInt->setEnabled(true);
-    exit(EXIT_SUCCESS);    
-}
-
-void Daemon::logMessage(const QString &message)
-{
-    syslog(LOG_INFO, "%s", message.toStdString().c_str());
+    emit sigInt();
 }

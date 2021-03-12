@@ -11,7 +11,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/stat.h>
-#include <sys/syslog.h>
 #include <sys/socket.h>
 #include <sys/resource.h>
 #include <memory>
@@ -23,14 +22,12 @@ class Daemon : public QObject
 {
     Q_OBJECT
 public:
-
     /*!
      * \brief pDaemon Alias for std::unique_ptr<Daemon>.
      */
     typedef std::unique_ptr<Daemon> pDaemon;
 
 public:
-
     /*!
      * \brief Daemon Basic constructor.
      * \param parent
@@ -40,6 +37,7 @@ public:
     Daemon& operator=(Daemon& other) = delete;
     Daemon(Daemon&& other) = delete;
     Daemon& operator=(Daemon&& other) = delete;
+
     /*!
      * \brief Destructor
      */
@@ -53,25 +51,37 @@ public:
     // Unix signal handlers
     /*!
      * \brief termHandler Handler of UNIX SIGTERM signal.
-     * \param sig Unused variable. Number of UNIX signal.
+     * \param sig Number of UNIX signal.
      */
     static void termHandler(int sig);
 
     /*!
      * \brief intHandler Handler of UNIX SIGINT signal.
-     * \param sig Unused variable. Number of UNIX signal.
+     * \param sig Number of UNIX signal.
      */
     static void intHandler(int sig);
 
     /*!
      * \brief hupHandler Handler of UNIX SIGHUP signal.
-     * \param sig Unused variable. Number of UNIX signal.
+     * \param sig Number of UNIX signal.
      */
     static void hupHandler(int sig);
-    static void pauseHandler(int sig);
-    static void resumeHandler(int sig);
 
-    void logMessage(const QString& message);
+signals:
+    /*!
+     * \brief sigHup
+     */
+    void sigHup();
+
+    /*!
+     * \brief sigTerm
+     */
+    void sigTerm();
+
+    /*!
+     * \brief sigInt
+     */
+    void sigInt();
 
 public slots:
     // Qt signal handlers
@@ -91,13 +101,12 @@ public slots:
     void handleSigInt();
 
 private:
-
     /*!
      * \brief signalHandlerConfig Method that configure signal handlers.
      */
     static void signalHandlerConfig();
-private:
 
+private:
     pDaemon _daemon; //!< Unique pointer to Daemon
     QString _pidFile; //!< Name of file with process ID
     static int _sigHupFd[2]; //!< File descriptor for HUP signal
