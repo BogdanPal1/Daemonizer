@@ -21,6 +21,6 @@ SOURCES += \
 HEADERS += \
         daemonizer.h
 unix {
-    target.path = /usr/lib
+    target.path = /usr/lib/Daemonizer
     INSTALLS += target
 }
