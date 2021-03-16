@@ -1,4 +1,4 @@
-#include "daemon.h"
+#include "daemonizer.h"
 
 int Daemon::_sigHupFd[2];
 int Daemon::_sigIntFd[2];
