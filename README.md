@@ -8,3 +8,5 @@ At this moment the daemon can handle 3 UNIX signals:
 * SIGINT 
 * SIGHUP
 
+If you want to use static linking than go to StaticDaemonizer, otherwise
+if you want to use dynamic linking go to DynamicDaemonizer.
