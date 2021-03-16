@@ -13,7 +13,6 @@
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <sys/resource.h>
-#include <memory>
 
 /*!
  * \brief The Daemon class
@@ -21,11 +20,6 @@
 class Daemon : public QObject
 {
     Q_OBJECT
-public:
-    /*!
-     * \brief pDaemon Alias for std::unique_ptr<Daemon>.
-     */
-    typedef std::unique_ptr<Daemon> pDaemon;
 
 public:
     /*!
@@ -44,7 +38,7 @@ public:
     ~Daemon();
 
     /*!
-     * \brief Daemonize Main method of class. Use for daemonisation.
+     * \brief daemonize Main method of class. Use for daemonisation.
      */
     void daemonize();
 
@@ -69,6 +63,10 @@ public:
 
 signals:
     /*!
+     * \brief You can use this signals for bounding with slots from another Qt object.
+     */
+
+    /*!
      * \brief sigHup
      */
     void sigHup();
@@ -84,7 +82,6 @@ signals:
     void sigInt();
 
 public slots:
-    // Qt signal handlers
     /*!
      * \brief handleSigHup Handler of SIGHUP signal which can work with Qt objects.
      */
@@ -107,14 +104,13 @@ private:
     static void signalHandlerConfig();
 
 private:
-    pDaemon _daemon; //!< Unique pointer to Daemon
-    QString _pidFile; //!< Name of file with process ID
-    static int _sigHupFd[2]; //!< File descriptor for HUP signal
-    static int _sigTermFd[2]; //!< File descriptor for TERM signal
-    static int _sigIntFd[2]; //!< File descriptor for INT signal
-    QSocketNotifier* _snHup = nullptr; //!< Socket notifier for HUP signal
-    QSocketNotifier* _snTerm = nullptr; //!< Socket notifier for TERM signal
-    QSocketNotifier* _snInt = nullptr; //!< Socket notifier for INT signal
+    QString _pidFile; //!< Name of file with process ID.
+    static int _sigHupFd[2]; //!< File descriptor for HUP signal.
+    static int _sigTermFd[2]; //!< File descriptor for TERM signal.
+    static int _sigIntFd[2]; //!< File descriptor for INT signal.
+    QSocketNotifier* _snHup = nullptr; //!< Socket notifier for HUP signal.
+    QSocketNotifier* _snTerm = nullptr; //!< Socket notifier for TERM signal.
+    QSocketNotifier* _snInt = nullptr; //!< Socket notifier for INT signal.
 };
 
 #endif // DAEMON_H
