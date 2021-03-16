@@ -30,6 +30,6 @@ HEADERS += \
         daemonizer_global.h 
 
 unix {
-    target.path = /usr/lib
+    target.path = /usr/lib/Daemonizer
     INSTALLS += target
 }
