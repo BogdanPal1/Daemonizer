@@ -1,4 +1,4 @@
-#include "../include/daemonizer.h"
+#include "daemonizer.h"
 
 int Daemon::_sigHupFd[2];
 int Daemon::_sigIntFd[2];
@@ -6,7 +6,7 @@ int Daemon::_sigTermFd[2];
 
 Daemon::Daemon(QObject* parent) : QObject(parent)
 {
-    _pidFile = QString("/tmp/TestDaemon.pid");
+    _pidFile = QString("/tmp/daemon.pid");
 }
 
 Daemon::~Daemon()
