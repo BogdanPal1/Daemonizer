@@ -1,12 +1,11 @@
 #!/bin/bash
 
-# Variable that holds path to directory for header file
-DIR=/usr/include/Daemonizer
-
 # Installing library
-sudo make install
-sudo mkdir $DIR && sudo cp daemonizer.h $DIR
-
-# Cleaning our room
-make clean
-rm -f install
+if [[ -d $PWD/../build ]]
+then
+    cd $PWD/../build
+    cmake --install .
+else
+    echo "You must to build library first."
+    echo "Please run build.sh"
+fi
