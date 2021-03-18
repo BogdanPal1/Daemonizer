@@ -74,3 +74,5 @@ Thumbs.db
 #CMake
 /StaticDaemonizer/build/*
 /StaticDaemonizer/*.txt.user
+/DynamicDaemonizer/build/*
+/DynamicDaemonizer/*.txt.user
