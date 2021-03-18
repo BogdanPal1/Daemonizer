@@ -18,6 +18,8 @@ find_package(Qt5 COMPONENTS Core REQUIRED)
 
 add_library(DynamicDaemonizer SHARED
   ${SOURCES}/daemonizer.cpp
+  ${HEADERS}/daemonizer.h
+  ${HEADERS}/daemonizer_global.h
 )
 
 set_target_properties(DynamicDaemonizer PROPERTIES VERSION ${PROJECT_VERSION})
