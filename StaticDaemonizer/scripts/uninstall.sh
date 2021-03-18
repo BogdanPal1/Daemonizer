@@ -1,7 +1,7 @@
 #!/bin/bash
 
-LIB_PATH=/usr/local/lib/Daemonizer
-INCLUDE_PATH=/usr/local/include/Daemonizer
+LIB_PATH=/usr/local/lib/daemonizer
+INCLUDE_PATH=/usr/local/include/daemonizer
 
 if [[ -d $LIB_PATH && -d $INCLUDE_PATH ]]
 then
